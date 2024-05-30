@@ -15,6 +15,8 @@ from sklearn.datasets import fetch_california_housing
 
 
 X, y = fetch_california_housing(return_X_y=True)
+print(X.shape)
+print(y)
 random_state = np.random.RandomState(0)
 train_sizes_abs, train_scores, test_scores = learning_curve(
     GaussianMixtureRegressor(n_components=3, random_state=random_state),
