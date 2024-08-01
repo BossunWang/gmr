@@ -525,7 +525,7 @@ class GMM(object):
         priors = _safe_probability_density(
             self.priors * marginal_norm_factors, marginal_exponents)
         priors = priors.reshape(n_samples, 1, self.n_components)
-        return np.sum(priors * posterior_means, axis=-1)
+        return np.sum(priors * posterior_means, axis=-1), priors
 
     def to_ellipses(self, factor=1.0):
         """Compute error ellipses.

@@ -21,9 +21,18 @@ peak is represented by at least one of the Gaussians of the GMM.
 """
 print(__doc__)
 
-import numpy as np
+from matplotlib import cm
+from matplotlib.colors import ListedColormap
+import matplotlib.animation as animation
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
 from gmr import GMM, plot_error_ellipses
+
+
+def logsumexp(x):
+    c = x.max()
+    return c + np.log(np.sum(np.exp(x - c)))
 
 
 random_state = np.random.RandomState(3)
@@ -33,44 +42,44 @@ z = y * np.sin(x)
 
 XY_train = np.column_stack((x, y, z))
 print(f'XY_train: {XY_train.shape}')
-gmm = GMM(n_components=30, random_state=random_state)
+gmm = GMM(n_components=50, random_state=random_state)
 gmm.from_samples(XY_train)
 
-plt.figure(figsize=(10, 5))
+YZ_pred, weights = gmm.predict([0], x[:, None])
+print(f'Y_pred: {YZ_pred.shape}')
+class_label = np.argmax(weights, axis=-1)
+print(f'class: {class_label}')
 
-ax = plt.subplot(121)
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+ax.set_xlabel('$X$')
+ax.set_ylabel('$Y$')
+ax.set_zlabel('$Z$')
+# ax = plt.subplot(121)
 ax.set_title("Dataset and GMM")
-ax.scatter(x, y, s=1)
-colors = ["r", "g", "b", "orange"]
-# plot_error_ellipses(ax, gmm, colors=colors)
-ax.set_xlabel("x")
-ax.set_ylabel("y")
+ax.scatter(x, y, z, s=3, label="GT")
+ax.scatter(x, YZ_pred[:, 0], YZ_pred[:, 1], s=3, label="pred")
+# ax.plot_surface(x, y, z[:, None], zorder=-11, cmap=cm.twilight)
+ax.legend()
+plt.show()
 
-ax = plt.subplot(122)
-ax.set_title("Conditional Distribution")
 Y = np.linspace(np.min(y), np.max(y), 100)
 Z = np.linspace(np.min(z), np.max(z), 100)
-test_index = 10
-X_test = x[test_index]
-Y_GT = y[test_index]
-Z_GT = z[test_index]
-print(f"test data: {X_test}, {Y_GT}, {Z_GT}")
-
-X_test_array = np.array([X_test])
-Y_pred = gmm.predict([0], X_test_array[:, None])
-print(f'Y_pred: {Y_pred}')
 
 target_data = []
 for i, y in enumerate(Y):
-    for i, z in enumerate(Z):
+    for j, z in enumerate(Z):
         target_data.append(np.array([y, z]))
 
 target_data = np.array(target_data)
-conditional_gmm = gmm.condition([0], [X_test])
+conditional_gmm = gmm.condition([0], x[0])
 p_of_Y = conditional_gmm.to_probability_density(target_data)
+print(p_of_Y.shape)
 highest_p = np.argmax(p_of_Y)
+
+# softmax
+p_of_Y = np.exp(p_of_Y - logsumexp(p_of_Y))
+
+print(f'Y_pred probability: {np.max(p_of_Y)}')
 print(f'Y_pred from cond: {target_data[highest_p]}')
-
-
-plt.tight_layout()
-plt.show()
