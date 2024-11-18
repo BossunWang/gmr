@@ -45,7 +45,7 @@ X[:, 1] = np.sin(X[:, 0]) + random_state.randn(n_samples) * 0.1
 
 gmm = GMM(n_components=3, random_state=0)
 gmm.from_samples(X)
-Y = gmm.predict(np.array([0]), X_test[:, np.newaxis])
+Y, _ = gmm.predict(np.array([0]), X_test[:, np.newaxis])
 
 plt.subplot(1, 2, 2)
 plt.title("Mixture of Experts: $p(Y | X) = \Sigma_k \pi_{k, Y|X} "
